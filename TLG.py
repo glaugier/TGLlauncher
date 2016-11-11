@@ -64,3 +64,19 @@ for x in maps:
             else:
                 raise NameError("You nead to define at least two of 'P0', 'P1' and 'P3'")
     print (vars(maps[x]))
+
+#
+# Printing to a file:
+#
+def printin( filename, string ):
+	"This prints a passed string to a passed file"
+	# Opening file
+	file = open(filename, "w")
+	# Writing content
+	#~ file.write(vars(maps[x]))
+	file.write(string)
+	# Closing file
+	file.close()
+	return;
+
+printin(filename="test.in", string="Printed")
