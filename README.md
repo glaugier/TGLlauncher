@@ -13,7 +13,7 @@ or
 ```shell
 	TLG.py parsets/*
 ```
-assuming the file 'parsets' holds input files such as parset.txt
+assuming directory 'parsets' holds input files such as parset.txt
 
 
 Troubleshooting
@@ -25,6 +25,5 @@ TODO
 ----
 
  + Handle more possibilities (missing values and multiple values)
- + Handle replicates
  + Actually launch TLG .in files
 

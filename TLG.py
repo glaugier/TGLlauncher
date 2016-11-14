@@ -15,55 +15,57 @@ PY3 = sys.version_info >= (3,)
 PY2 = not PY3
 
 class Parset:
-    """A set of map-generation parameters"""
-    pass
+		"""A set of map-generation parameters"""
+		pass
 class Maplist:
-    """A list of maps"""
-    pass
+		"""A list of maps"""
+		pass
 
 tmp = sys.argv[1]
 
 file = os.path.basename(tmp)
 path = os.path.split(tmp)[0]
-pf   = os.path.abspath(tmp)
+pf	 = os.path.abspath(tmp)
 print ('\nBasename:', file)
 
 """ Reading input """
 maps = {}	# map is a "dictionary" object.
 current = None
-f = open(pf, 'r')     # We open the file
+f = open(pf, 'r')		 # We open the file
 mylines = f.read().splitlines()
-f.close()               # We close the file
+f.close()							 # We close the file
 for line in mylines:
-    nm = line.split(":")[0]
-    val = line.split(":")[1:]
-#    print("Arg", nm, "is", val)
-    if len(val) < 1:
-        current = None
-        print("skipping blanck line")
-        continue
-    if current is None:
-        current = val[0]
-        maps[current] = Parset()
+		nm = line.split(":")[0]
+		val = line.split(":")[1:]
+#		print("Arg", nm, "is", val)
+		if len(val) < 1:
+				current = None
+				print("skipping blanck line")
+				continue
+		if current is None:
+				current = val[0]
+				maps[current] = Parset()
 
-#    print("Saving in ", current)    
-    setattr(maps[current], nm, val)
+#		print("Saving in ", current)		
+		setattr(maps[current], nm, val)
 
 """ Filling in the gaps"""
-    
+		
 print("\n\n")
 for x in maps:
-    print ("Map: ", x)
-    if not hasattr(maps[x], "P2"):
-        if hasattr(maps[x], "P0"):
-            if hasattr(maps[x], "P1"):
-                print("P0 is",  maps[x].P0[0])
-                # TODO: Not guessable if both attributes are array
-                # TODO: Gues if one attribute is array
-                maps[x].P2 = 1 - float(maps[x].P0[0]) - float(maps[x].P1[0])
-            else:
-                raise NameError("You nead to define at least two of 'P0', 'P1' and 'P3'")
-    print (vars(maps[x]))
+		print ("Map: ", x)
+		if not hasattr(maps[x], "REPLICATES"):
+				maps[x].REPLICATES = [1]
+		if not hasattr(maps[x], "P2"):
+				if hasattr(maps[x], "P0"):
+						if hasattr(maps[x], "P1"):
+								print("P0 is",	maps[x].P0[0])
+								# TODO: Not guessable if both attributes are array
+								# TODO: Gues if one attribute is array
+								maps[x].P2 = 1 - float(maps[x].P0[0]) - float(maps[x].P1[0])
+						else:
+								raise NameError("You nead to define at least two of 'P0', 'P1' and 'P3'")
+		print (vars(maps[x]))
 
 print("\n\n first map:\n")
 
@@ -79,7 +81,7 @@ def map2in( mapdict, mapname, mapid=None, suffix=".in"):
 	mymap = mapdict[mapname]
 	name = mymap.NAME[0]
 	if mapid is not None:
-	    print("not none!")
+			name = name + "_" +str(mapid).zfill(3)
 	# Opening file
 	filename = name + suffix
 	file = open(filename, "w")
@@ -104,6 +106,9 @@ def map2in( mapdict, mapname, mapid=None, suffix=".in"):
 #
 print("\n")
 for mapname in mapnames :
-    print("Creating '.in' for map " + mapname)
-    # TODO: Loop over replicates
-    map2in(mapdict=maps, mapname=mapname, mapid=None)
+	print("Creating '.in' file(s) for map " + mapname)
+	reps = list(range(int(maps[mapname].REPLICATES[0])))
+	reps = [x+1 for x in reps] # add 1 to reps
+	for i in reps :
+		# TODO: Loop over replicates
+		map2in(mapdict=maps, mapname=mapname, mapid=i)
