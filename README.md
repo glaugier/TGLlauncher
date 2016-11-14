@@ -25,6 +25,5 @@ TODO
 ----
 
 	+ Handle more possibilities (missing values and multiple values)
-	+ Actually write the .in files
 	+ Actually launch TLG .in files
 

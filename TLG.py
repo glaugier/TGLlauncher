@@ -29,7 +29,7 @@ pf   = os.path.abspath(tmp)
 print ('\nBasename:', file)
 
 """ Reading input """
-maps = {}
+maps = {}	# map is a "dictionary" object.
 current = None
 f = open(pf, 'r')     # We open the file
 mylines = f.read().splitlines()
@@ -65,18 +65,40 @@ for x in maps:
                 raise NameError("You nead to define at least two of 'P0', 'P1' and 'P3'")
     print (vars(maps[x]))
 
+print("\n\n first map:\n")
+
+mapnames = list(maps.keys())
+
+print(mapnames[0])
+
 #
 # Printing to a file:
 #
-def printin( filename, string ):
+def map2in( mapdict, mapname, mapid=None, suffix=".in"):
 	"This prints a passed string to a passed file"
+	mymap = mapdict[mapname]
+	name = mymap.NAME[0]
+	if mapid is not None:
+	    print("not none!")
 	# Opening file
+	filename = name + suffix
 	file = open(filename, "w")
 	# Writing content
 	#~ file.write(vars(maps[x]))
-	file.write(string)
+	#~ text = ''.join(tuple)
+	file.write("[NAME:"+name+"] => Name of the generated landscape\n")
+	file.write("[X_SIZE:" + str(int(float(mymap.X_SIZE[0]))) + "]X[Y_SIZE:" + str(int(float(mymap.Y_SIZE[0]))) + "] => size of the landscape\n")
+	file.write("[P1:" + str(float(mymap.P1[0])) + "] => proportion of type 1 (agricultural)\n")
+	file.write("[P2:" + str(round(float(mymap.P2), 2)) + "] => proportion of type 2 (urban)\n")
+	file.write("[Q11:" + str(round(float(mymap.Q11[0]), 2)) + "] => P(11|1*)\n")
+	file.write("[Q11:"+ str(round(float(mymap.Q22[0]), 2)) + "] => P(22|2*)\n")
+	file.write("[MAX_ITERATIONS:" + str(int(float(mymap.MAX_ITERATIONS[0]))) + "] => Max number of iterations\n")
+	file.write("[ERROR_THRESHOLD:"+ str(int(float(mymap.ERROR_THRESHOLD[0]))) + "] => Min value of delta to keep going\n")
+	file.write("[METHOD:"+ mymap.METHOD[0] + "] => Method to compute delta\n")
+	file.write("[SEED:"+ str(int(float(mymap.SEED[0]))) + "] => Random seed number, set to 0 for random\n")
 	# Closing file
 	file.close()
 	return;
 
-printin(filename="test.in", string="Printed")
+print("\n\nNow printing to a file")
+map2in(mapdict=maps, mapname=mapnames[0], mapid="001")
