@@ -24,6 +24,7 @@ Troubleshooting
 TODO
 ----
 
-	+ Handle more possibilities (missing values and multiple values)
-	+ Actually launch TLG .in files
+ + Handle more possibilities (missing values and multiple values)
+ + Handle replicates
+ + Actually launch TLG .in files
 

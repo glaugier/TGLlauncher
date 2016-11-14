@@ -69,10 +69,10 @@ print("\n\n first map:\n")
 
 mapnames = list(maps.keys())
 
-print(mapnames[0])
-
 #
-# Printing to a file:
+# Printing the maps into .in files
+#
+# A dedicated function:
 #
 def map2in( mapdict, mapname, mapid=None, suffix=".in"):
 	"This prints a passed string to a passed file"
@@ -86,7 +86,7 @@ def map2in( mapdict, mapname, mapid=None, suffix=".in"):
 	# Writing content
 	#~ file.write(vars(maps[x]))
 	#~ text = ''.join(tuple)
-	file.write("[NAME:"+name+"] => Name of the generated landscape\n")
+	file.write("[NAME:"+ name +"] => Name of the generated landscape\n")
 	file.write("[X_SIZE:" + str(int(float(mymap.X_SIZE[0]))) + "]X[Y_SIZE:" + str(int(float(mymap.Y_SIZE[0]))) + "] => size of the landscape\n")
 	file.write("[P1:" + str(float(mymap.P1[0])) + "] => proportion of type 1 (agricultural)\n")
 	file.write("[P2:" + str(round(float(mymap.P2), 2)) + "] => proportion of type 2 (urban)\n")
@@ -99,6 +99,11 @@ def map2in( mapdict, mapname, mapid=None, suffix=".in"):
 	# Closing file
 	file.close()
 	return;
-
-print("\n\nNow printing to a file")
-map2in(mapdict=maps, mapname=mapnames[0], mapid="001")
+#
+# Looping over all maps
+#
+print("\n")
+for mapname in mapnames :
+    print("Creating '.in' for map " + mapname)
+    # TODO: Loop over replicates
+    map2in(mapdict=maps, mapname=mapname, mapid=None)
