@@ -77,21 +77,30 @@ decs[current] = Parset(current, varlist)
 print("\n\n")
 for x in decs:
 	#~ print ("Declenson: ", x)
-	if not hasattr(decs[x].pars, "REPLICATES"):
+	if "REPLICATES" not in decs[x].pars:
+		print("Assuming 1 replicate for dec", x)
 		decs[x].pars["REPLICATES"] = [1]
-	if not hasattr(decs[x].pars, "P2"):
-		if hasattr(decs[x].pars, "P0"):
-			if hasattr(decs[x].pars, "P1"):
-				print("P0 is",	decs[x].P0[0])
+	if "P2" not in decs[x].pars:
+		print("P2 is missing")
+		if "P0" in decs[x].pars:
+			print("P0 is",	decs[x].pars["P0"])
+			if  "P1" in decs[x].pars:
+				print("P1 is",	decs[x].pars["P1"])
 				# TODO: Not guessable if both attributes are array
 				# TODO: Gues if one attribute is array
-				decs[x].pars.P2 = 1 - float(decs[x].P0[0]) - float(decs[x].P1[0])
+				#~ decs[x].pars["P2"] = list()
+				#~ decs[x].pars["P2"] = 
+				decs[x].pars["P2"] = [round(1 -
+															float(decs[x].pars["P0"][0]) -
+															float(decs[x].pars["P1"][0]), 4)]
+				print("So P2 is",	decs[x].pars["P2"])
 			else:
 				raise NameError("You nead to define at least two of 'P0', 'P1' and 'P3'")
 	#~ print (vars(decs[x]))
 
 decnames = list(decs.keys())
 print("done\n")
+print(vars(decs["F50"]))
 
 """ Creating the actual map sets """
 
@@ -221,63 +230,69 @@ for dec in sorted(decnames):
 
 
 
-print("Final maps are")
-for x in sorted(maps):
-	print ("\n", len(maps[x]), "maps in", x)
+#~ print("Final maps are")
+#~ for x in sorted(maps):
+	#~ print ("\n", len(maps[x]), "maps in", x)
 
-print("Final maps are")
-for x in sorted(maps):
-	print ("\ndec", x)
-	for m in maps[x]: print(" :Q11", m['Q11']," :Q22", m['Q22']," :X_SIZE", m['X_SIZE']," Y_SIZE", m['Y_SIZE']," :P1", m['P1'])
+#~ print("Final maps are")
+#~ for x in sorted(maps):
+	#~ print ("\ndec", x)
+	#~ for m in maps[x]: print(" :Q11", m['Q11']," :Q22", m['Q22']," :X_SIZE", m['X_SIZE']," Y_SIZE", m['Y_SIZE']," :P1", m['P1'])
 
 print("Final maps are")
 for x in sorted(maps):
 	for m in maps[x]:
-		tmp = {k: m[k] for k in ('Q11', 'Q22')}
-		pprint.pprint(tmp, width=1)
+		tmp = {k: m[k] for k in ("P0", "P1", "X_SIZE", 'Q11', 'Q22')}
+		pprint.pprint(tmp, width=4)
 
 
 
-# x is now out of scope, has no references and can now be deleted
+mapnames = list(maps.keys())
 
-#~ mapnames = list(maps.keys())
+#
+# Printing the maps into .in files
+#
+# A dedicated function:
+#
+def map2in( mapdict, mapname, mapid=None, suffix=".in"):
+	"This prints a passed string to a passed file"
+	mymap = mapdict
+	name = mapname
+	if mapid is not None:
+		""" There is a map replicate ID, should add it to the name """
+		name = name + "_" +str(mapid).zfill(4)														# 4 digits -> up to 9999 maps
+	# Opening file
+	filename = name + suffix
+	file = open(filename, "w")
+	# Writing content
+	file.write("[NAME:"+ name +"] => Name of the generated landscape\n")
+	file.write("[X_SIZE:" + str(int(float(mymap["X_SIZE"][0]))) + "]X[Y_SIZE:" + str(int(float(mymap["Y_SIZE"][0]))) + "] => size of the landscape\n")
+	file.write("[P1:" + str(float(mymap["P1"][0])) + "] => proportion of type 1 (agricultural)\n")
+	file.write("[P2:" + str(float(mymap["P2"][0])) + "] => proportion of type 2 (urban)\n")
+	file.write("[Q11:" + str(float(mymap["Q11"][0])) + "] => P(11|1*)\n")
+	file.write("[Q11:"+ str(float(mymap["Q22"][0])) + "] => P(22|2*)\n")
+	file.write("[MAX_ITERATIONS:" + str(int(float(mymap["MAX_ITERATIONS"][0]))) + "] => Max number of iterations\n")
+	file.write("[ERROR_THRESHOLD:"+ str(int(float(mymap["ERROR_THRESHOLD"][0]))) + "] => Min value of delta to keep going\n")
+	file.write("[METHOD:"+ mymap["METHOD"][0] + "] => Method to compute delta\n")
+	file.write("[SEED:"+ str(int(float(mymap["SEED"][0]))) + "] => Random seed number, set to 0 for random\n")
+	# Closing file
+	file.close()
+	return;
 
-#~ #
-#~ # Printing the maps into .in files
-#~ #
-#~ # A dedicated function:
-#~ #
-#~ def map2in( mapdict, mapname, mapid=None, suffix=".in"):
-	#~ "This prints a passed string to a passed file"
-	#~ mymap = mapdict[mapname]
-	#~ name = mymap.NAME[0]
-	#~ if mapid is not None:
-			#~ name = name + "_" +str(mapid).zfill(3)
-	#~ # Opening file
-	#~ filename = name + suffix
-	#~ file = open(filename, "w")
-	#~ # Writing content
-	#~ file.write("[NAME:"+ name +"] => Name of the generated landscape\n")
-	#~ file.write("[X_SIZE:" + str(int(float(mymap.X_SIZE[0]))) + "]X[Y_SIZE:" + str(int(float(mymap.Y_SIZE[0]))) + "] => size of the landscape\n")
-	#~ file.write("[P1:" + str(float(mymap.P1[0])) + "] => proportion of type 1 (agricultural)\n")
-	#~ file.write("[P2:" + str(round(float(mymap.P2), 2)) + "] => proportion of type 2 (urban)\n")
-	#~ file.write("[Q11:" + str(round(float(mymap.Q11[0]), 2)) + "] => P(11|1*)\n")
-	#~ file.write("[Q11:"+ str(round(float(mymap.Q22[0]), 2)) + "] => P(22|2*)\n")
-	#~ file.write("[MAX_ITERATIONS:" + str(int(float(mymap.MAX_ITERATIONS[0]))) + "] => Max number of iterations\n")
-	#~ file.write("[ERROR_THRESHOLD:"+ str(int(float(mymap.ERROR_THRESHOLD[0]))) + "] => Min value of delta to keep going\n")
-	#~ file.write("[METHOD:"+ mymap.METHOD[0] + "] => Method to compute delta\n")
-	#~ file.write("[SEED:"+ str(int(float(mymap.SEED[0]))) + "] => Random seed number, set to 0 for random\n")
-	#~ # Closing file
-	#~ file.close()
-	#~ return;
-#~ #
-#~ # Looping over all maps
-#~ #
-#~ print("\n")
-#~ for mapname in mapnames :
-	#~ print("Creating '.in' file(s) for map " + mapname)
-	#~ reps = list(range(int(maps[mapname].REPLICATES[0])))
-	#~ reps = [x+1 for x in reps] # add 1 to reps
-	#~ for i in reps :
-		#~ # TODO: Loop over replicates
-		#~ map2in(mapdict=maps, mapname=mapname, mapid=i)
+#
+# Looping over all maps
+#
+print("\n")
+
+for x in sorted(maps):
+	i = 0
+	for m in maps[x]:
+		i += 1
+		reps = list(range(int(m["REPLICATES"][0])))													# Create a list 0:REPLICATES
+		reps = [x+1 for x in reps] 																					# add 1 to reps : 1:(REPLICATES +1)
+		print("Creating '.in' file(s) for map",
+						str(i).zfill(3), "declension " + x,
+						"(", m["REPLICATES"][0], "replicates)")
+		for r in reps :
+			# TODO: Implement offset for replicates (in case we want additional maps
+			map2in(mapdict=m, mapname=x+"_"+str(i).zfill(3), mapid=r)
