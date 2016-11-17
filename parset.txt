@@ -1,9 +1,10 @@
+#: First parameter declenson
 NAME:F50
 X_SIZE:100
 Y_SIZE:100
 P0:0.5
 P1:0.25
-Q11:0.25:0.35:0.45:0.55
+Q11:0.45:0.55
 Q22:0.25
 MAX_ITERATIONS:1E6
 ERROR_THRESHOLD:0.01
@@ -11,6 +12,7 @@ METHOD:Munoz
 SEED:0
 REPLICATES:3
 
+#: Second parameter declenson
 NAME:F56
 X_SIZE:100
 Y_SIZE:100
@@ -23,6 +25,7 @@ ERROR_THRESHOLD:0.01
 METHOD:Munoz
 SEED:0
 
+#: Third parameter declenson
 NAME:F60
 X_SIZE:100
 Y_SIZE:100

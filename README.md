@@ -24,6 +24,7 @@ Troubleshooting
 TODO
 ----
 
- + Handle more possibilities (missing values and multiple values)
+ + Handle more possibilities (missing values)
+ + Redo work the "printing into file" section (not much work)
  + Actually launch TLG .in files
 
