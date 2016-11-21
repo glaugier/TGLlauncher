@@ -31,6 +31,7 @@ Features
    + <NAME> is the value of parameter `NAME` in the parset file
    + <Map number> is an arbitrary number given to each of the map sets derived from a declension set
    + <Replicate number> is the replicate ID (4-digit integer)
+  + Create the required Architecture (IN/ OUT/ LOG/) if the directories are missing
  + Launches the actual TLG program for each .in file generated
 
 Troubleshooting
@@ -46,6 +47,5 @@ TODO
  + Option for only generating the .in files
  + Handle architecture:
   + A general path to where to save the files
-  + Generate `IN/` `OUT/` and `LOG/` dirs if needs be
+  + Actually use OUT/ dir
  + Handle custom path to exectutable
-

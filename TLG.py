@@ -98,7 +98,7 @@ for x in decs:
 															float(decs[x].pars["P1"][0]), 4)]
 				print("So P2 is",	decs[x].pars["P2"])
 			else:
-				raise NameError("You nead to define at least two of 'P0', 'P1' and 'P3'")
+				raise NameError("You need to define at least two of 'P0', 'P1' and 'P3'")
 	#~ print (vars(decs[x]))
 
 decnames = list(decs.keys())
@@ -252,10 +252,16 @@ for x in sorted(maps):
 mapnames = list(maps.keys())
 
 # TODO: Create directories if absent
-def launch (infile, executable, filename, path=""):
+def launch (infile, executable, filename, path="./"):
 	""" Launch the TLG program, redirecting stdout and stderr to
 			corresponding files
 	"""
+	if not os.path.exists(path+"OUT/"):
+		print(path+"OUT/ does not exist, creating it")
+		os.makedirs(path+"OUT/")
+	if not os.path.exists(path+"LOGS/"):
+		print(path+"LOGS/ does not exist, creating it")
+		os.makedirs(path+"LOGS/")
 	cmd = executable + " " + path + infile + " 1> "+ path + "LOGS/" + filename + ".out 2> " + path + "LOGS/" + filename +".err &"
 	# TODO: Implement custom OUT path
 	print("Launching TLG for", cmd)
@@ -274,6 +280,10 @@ def map2in( mapdict, mapname, mapid=None, suffix=".in"):
 		""" There is a map replicate ID, should add it to the name """
 		name = name + "_" +str(mapid).zfill(4)															# 4 digits -> up to 9999 maps
 	# Opening file
+	if not os.path.exists(path+"IN/"):
+		""" IN/ directory is missing, need to create it first """
+		print(path+"IN/ does not exist, creating it")
+		os.makedirs(path+"IN/")
 	filename = "IN/" + name + suffix
 	file = open(filename, "w")
 	# Writing content
@@ -282,7 +292,7 @@ def map2in( mapdict, mapname, mapid=None, suffix=".in"):
 	file.write("[P1:" + str(float(mymap["P1"][0])) + "] => proportion of type 1 (agricultural)\n")
 	file.write("[P2:" + str(float(mymap["P2"][0])) + "] => proportion of type 2 (urban)\n")
 	file.write("[Q11:" + str(float(mymap["Q11"][0])) + "] => P(11|1*)\n")
-	file.write("[Q11:"+ str(float(mymap["Q22"][0])) + "] => P(22|2*)\n")
+	file.write("[Q22:"+ str(float(mymap["Q22"][0])) + "] => P(22|2*)\n")
 	file.write("[MAX_ITERATIONS:" + str(int(float(mymap["MAX_ITERATIONS"][0]))) + "] => Max number of iterations\n")
 	file.write("[ERROR_THRESHOLD:"+ str(int(float(mymap["ERROR_THRESHOLD"][0]))) + "] => Min value of delta to keep going\n")
 	file.write("[METHOD:"+ mymap["METHOD"][0] + "] => Method to compute delta\n")
@@ -291,7 +301,7 @@ def map2in( mapdict, mapname, mapid=None, suffix=".in"):
 	file.close()
 	if not dry:
 		""" Parameter --dryrun not set """
-		launch(filename, "./TLGv0.1.8", filename=name)											# Actually launches TLG
+		launch(filename, "TLG", filename=name)											# Actually launches TLG
 	return;
 
 #
