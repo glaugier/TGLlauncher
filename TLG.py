@@ -9,6 +9,8 @@ import sys
 import os
 from copy import deepcopy
 import pprint
+import subprocess
+
 
 # Python 2/3 support
 PY3 = sys.version_info >= (3,)
@@ -32,6 +34,7 @@ class Maplist:
 
 
 tmp = sys.argv[1]
+dry = False # TODO: Read it from CLI parameters
 
 file = os.path.basename(tmp)
 path = os.path.split(tmp)[0]
@@ -201,7 +204,6 @@ def unroll (dec,						# declenson object
 		param = list(mymap.pars.keys())[1]																	# Working on the (next) first param
 	res = checkpar(mymap, maps, param, parnames=parnames,
 									roll=roll, depth=depth);															# Roll is an indicator of where the function is working (for debug-ing)
-	#~ print("alligator")
 	maps = deepcopy(res['maps']);																					# Getting the results back
 	mymap = res["mymap"];
 
@@ -249,6 +251,16 @@ for x in sorted(maps):
 
 mapnames = list(maps.keys())
 
+# TODO: Create directories if absent
+def launch (infile, executable, filename, path=""):
+	""" Launch the TLG program, redirecting stdout and stderr to
+			corresponding files
+	"""
+	cmd = executable + " " + path + infile + " 1> "+ path + "LOGS/" + filename + ".out 2> " + path + "LOGS/" + filename +".err &"
+	# TODO: Implement custom OUT path
+	print("Launching TLG for", cmd)
+	subprocess.Popen( cmd, shell = True)
+
 #
 # Printing the maps into .in files
 #
@@ -260,9 +272,9 @@ def map2in( mapdict, mapname, mapid=None, suffix=".in"):
 	name = mapname
 	if mapid is not None:
 		""" There is a map replicate ID, should add it to the name """
-		name = name + "_" +str(mapid).zfill(4)														# 4 digits -> up to 9999 maps
+		name = name + "_" +str(mapid).zfill(4)															# 4 digits -> up to 9999 maps
 	# Opening file
-	filename = name + suffix
+	filename = "IN/" + name + suffix
 	file = open(filename, "w")
 	# Writing content
 	file.write("[NAME:"+ name +"] => Name of the generated landscape\n")
@@ -277,6 +289,9 @@ def map2in( mapdict, mapname, mapid=None, suffix=".in"):
 	file.write("[SEED:"+ str(int(float(mymap["SEED"][0]))) + "] => Random seed number, set to 0 for random\n")
 	# Closing file
 	file.close()
+	if not dry:
+		""" Parameter --dryrun not set """
+		launch(filename, "./TLGv0.1.8", filename=name)											# Actually launches TLG
 	return;
 
 #
@@ -284,6 +299,8 @@ def map2in( mapdict, mapname, mapid=None, suffix=".in"):
 #
 print("\n")
 
+
+	
 for x in sorted(maps):
 	i = 0
 	for m in maps[x]:
