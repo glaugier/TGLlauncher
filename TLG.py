@@ -34,7 +34,7 @@ class Maplist:
 
 
 tmp = sys.argv[1]
-dry = False # TODO: Read it from CLI parameters
+dry = False 	# TODO: Read it from CLI parameters
 
 file = os.path.basename(tmp)
 path = os.path.split(tmp)[0]
@@ -44,27 +44,28 @@ print ('\nBasename:', file)
 """
 		Reading input
 """
-decs = {}	# decs is a "dictionary" object.
-					# decs are declensions of maps (some pars are arrays)
+decs = {}																																# decs is a "dictionary" object.
+																																				# decs are declensions of maps (some pars are arrays)
 current = None
-f = open(pf, 'r')							# We open the file
+f = open(pf, 'r')																												# We open the file
 mylines = f.read().splitlines()
-f.close()											# We close the file
+f.close()																																# We close the file
 varlist = {}
 for line in mylines:
 	nm 	= line.split(":")[0]
 	val = line.split(":")[1:]
-	if nm == "#": continue 			# Comment, skipping line
-	if len(val) < 1: 						# Check if empty line => save variables
+	if nm == "#": continue 																								# Comment, skipping line
+	if len(val) < 1: 																											# Check if empty line => save variables
 		print("End of", current, "parameters, storing list...")
 		decs[current] = Parset(current, varlist)
 		current = None
-		varlist = {}		# Otherwise later modifs will affect previous decs[]
+		varlist = {}																												# Otherwise later modifs will affect previous decs[]
 		continue
-	if current is None: 				# New parameter set => store name
+	if current is None:
+		""" New set of parameters => store name """
 		current = val[0]
 		continue
-	# Save parameter into dictionary
+																																				# Save parameter into dictionary
 	varlist[nm] = val[:]
 """
 We need to store the last declenson, otherwise it's lost
@@ -83,6 +84,9 @@ for x in decs:
 	if "REPLICATES" not in decs[x].pars:
 		print("Assuming 1 replicate for dec", x)
 		decs[x].pars["REPLICATES"] = [1]
+	if "PATH" not in decs[x].pars:
+		print("Assuming path is './'")
+		decs[x].pars["PATH"] = ["./"]
 	if "P2" not in decs[x].pars:
 		print("P2 is missing")
 		if "P0" in decs[x].pars:
@@ -103,7 +107,6 @@ for x in decs:
 
 decnames = list(decs.keys())
 print("done\n")
-print(vars(decs["F50"]))
 
 """ Creating the actual map sets """
 
@@ -256,13 +259,14 @@ def launch (infile, executable, filename, path="./"):
 	""" Launch the TLG program, redirecting stdout and stderr to
 			corresponding files
 	"""
-	if not os.path.exists(path+"OUT/"):
-		print(path+"OUT/ does not exist, creating it")
-		os.makedirs(path+"OUT/")
-	if not os.path.exists(path+"LOGS/"):
-		print(path+"LOGS/ does not exist, creating it")
-		os.makedirs(path+"LOGS/")
-	cmd = executable + " " + path + infile + " 1> "+ path + "LOGS/" + filename + ".out 2> " + path + "LOGS/" + filename +".err &"
+
+	if not os.path.exists(path+"/OUT/"):
+		print(path+"/OUT/ does not exist, creating it")
+		os.makedirs(path+"/OUT/")
+	if not os.path.exists(path+"/LOGS/"):
+		print(path+"/LOGS/ does not exist, creating it")
+		os.makedirs(path+"/LOGS/")
+	cmd = executable + " " + infile + " 1> "+ path + "/LOGS/" + filename + ".out 2> " + path + "/LOGS/" + filename +".err &"
 	# TODO: Implement custom OUT path
 	print("Launching TLG for", cmd)
 	subprocess.Popen( cmd, shell = True)
@@ -272,19 +276,24 @@ def launch (infile, executable, filename, path="./"):
 #
 # A dedicated function:
 #
-def map2in( mapdict, mapname, mapid=None, suffix=".in"):
+def map2in( mapdict, mapname, mapid=None, suffix=".in", path="./"):
 	"This prints a passed string to a passed file"
 	mymap = mapdict
 	name = mapname
+	path = os.path.expanduser(path)																				# Replaces "~"
+	path = os.path.normpath(path)																					# Replaces "./" "../ etc
+	path = os.path.abspath(path)																					# Not sure if useful
+	print("\n\npath is ", path);
 	if mapid is not None:
 		""" There is a map replicate ID, should add it to the name """
 		name = name + "_" +str(mapid).zfill(4)															# 4 digits -> up to 9999 maps
 	# Opening file
-	if not os.path.exists(path+"IN/"):
+	if not os.path.exists(path+"/IN/"):
 		""" IN/ directory is missing, need to create it first """
-		print(path+"IN/ does not exist, creating it")
-		os.makedirs(path+"IN/")
-	filename = "IN/" + name + suffix
+		print(path+"/IN/ does not exist, creating it")
+		os.makedirs(path+"/IN/")
+	filename = path + "/IN/" + name + suffix
+	print("\n\nfilename is", filename)
 	file = open(filename, "w")
 	# Writing content
 	file.write("[NAME:"+ name +"] => Name of the generated landscape\n")
@@ -301,7 +310,7 @@ def map2in( mapdict, mapname, mapid=None, suffix=".in"):
 	file.close()
 	if not dry:
 		""" Parameter --dryrun not set """
-		launch(filename, "TLG", filename=name)											# Actually launches TLG
+		launch(filename, "tlg-core", filename=name, path=path)							# Actually launches TLG
 	return;
 
 #
@@ -322,4 +331,4 @@ for x in sorted(maps):
 						"(", m["REPLICATES"][0], "replicates)")
 		for r in reps :
 			# TODO: Implement offset for replicates (in case we want additional maps
-			map2in(mapdict=m, mapname=x+"_"+str(i).zfill(3), mapid=r)
+			map2in(mapdict=m, mapname=x+"_"+str(i).zfill(3), mapid=r, path=m["PATH"][0])
