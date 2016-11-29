@@ -18,20 +18,35 @@ assuming directory 'parsets' holds input files such as parset.txt
 Parameter list:
 ---------------
 
-#: Comment				(line ignored)
-NAME:string				(Run name, will be used to create the .in and output file)
-X_SIZE:int				(Landscape width (in px))
-Y_SIZE:int				(Landscape height (in px) Assumed equal to X_SIZE if missing (squared landscape))
-P0:real*				(Proportion of type 0 habitat)
-P1:real*				(Proportion of type 1 habitat)
-P2:real*				(Prop. of type 2, computed if missing, better let the program do the math)
-Q11:real*				(P(11|1*) )
-Q22:real*				(P(11|1*) )
-MAX_ITERATIONS:int		(Maximum number of iteration if did not converge)
-ERROR_THRESHOLD:real	(Max delta value)
-METHOD:string			(Name of the method usedd to compute delta)
-SEED:int				(Seed number for random generator, default to zero: random seed)
-PATH:string				(Optional: path where to generate files, defaults to `./`)
+`#: Comment`			(line ignored)
+
+`NAME:string`			(Run name, will be used to create the .in and output file)
+
+`X_SIZE:int`			(Landscape width (in px))
+
+`Y_SIZE:int`			(Landscape height (in px) Assumed equal to X_SIZE if missing (squared landscape))
+
+`P0:real*`				(Proportion of type 0 habitat)
+
+`P1:real*`				(Proportion of type 1 habitat)
+
+`P2:real*`				(Prop. of type 2, computed if missing, better let the program do the math)
+
+`Q11:real*`				(P(11|1*) )
+
+`Q22:real*`				(P(11|1*) )
+
+`MAX_ITERATIONS:int`	(Maximum number of iteration if did not converge)
+
+`ERROR_THRESHOLD:real`	(Max delta value)
+
+`METHOD:string`			(Name of the method usedd to compute delta)
+
+`SEED:int`				(Seed number for random generator, default to zero: random seed)
+
+`PATH:string`			(Optional: path where to generate files, defaults to `./`)
+
+`REPLICATES:int`		(Optional: number of replicate for each parapeter combo, defaults to 1)
 
 An asterisk `*` indicates possible multiple values separated by `:`
 
