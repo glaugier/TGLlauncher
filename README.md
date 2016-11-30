@@ -11,7 +11,7 @@ Usage
 ```
 or
 ```shell
-	TLG.py parsets/*
+	TLG.py parsets/*    # CURRENTLY BROKEN
 ```
 assuming directory 'parsets' holds input files such as parset.txt
 
@@ -83,7 +83,8 @@ Troubleshooting
 ---------------
 
  + Ignoring OUT/ again when generating the files...
-
+ + Broken feature: Using several parset files eg: parset/*
+ 
 TODO
 ----
 
