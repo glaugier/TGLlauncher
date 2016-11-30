@@ -71,6 +71,8 @@ Features
     - <Map number> is an arbitrary number given to each of the map sets derived from a declension set
     - <Replicate number> is the replicate ID (4-digit integer)
  + Launches the actual TLG program for each .in file generated
+  + Processes are launched in parallel (multithreading)
+  + Automatically choses number of CPUs (n-1, where n is the number of the machine)
 
 Requirements
 ---------------
@@ -80,7 +82,7 @@ Requirements
 Troubleshooting
 ---------------
 
- + No problem detected
+ + Ignoring OUT/ again when generating the files...
 
 TODO
 ----
@@ -89,9 +91,8 @@ TODO
  + Implement offset for replicates
  + Option for only generating the .in files
   + More CLI arguments
-  + Non-verbose mode
-  + Handle custom path to exectutable
- + Implement proper multithreading
-  + Custom number of CPUs
-  + Auto-detect the number of CPUs on the machine
+   + Non-verbose mode
+   + Handle custom path to exectutable
+   + Custom number of simultaneous CPUs
+
   

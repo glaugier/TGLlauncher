@@ -10,6 +10,69 @@ import os
 from copy import deepcopy
 import pprint
 import subprocess
+import multiprocessing
+import threading
+from queue import Queue
+import time
+"""
+We've imported threading, queue and time. Threading is for, threading,
+queue is going to help us make, you guessed it, a queue! Finally,
+we import time. Our only reason for importing time here is to simulate
+some idle time with a time.sleep() function.
+
+Next, we're going to define a thread lock. The idea of a threading lock
+is to prevent simultaneous modification of a variable.
+So, if two processes begin interaction with a variable with it is, say,
+5, and one operation adds 2, and the other adds 3, we're going to end
+with either 7 or 8 as the variable, rather than having it be 5+2+3,
+which would be 10. A lock will force an operation to wait until the
+variable is unlocked in order to access and modify it. Another use for
+a lock is to aid in input/output. With threading, it becomes quite easy
+to have two processes modifying the same file, and the data will
+literally just run over each other. So say you are meaning to save two
+values, like "Monday" and "Tuesday" to a file, you are intending for
+the file to just read: "Monday Tuesday," but instead it winds up looking
+like "MoTunedsadyay." A lock helps this.
+
+In this particular script, this is not actually useful, but still
+good practice when multitheading.
+"""
+
+print_lock = threading.Lock()																						# A lock for printing
+
+"""
+Here, we're looking to use the lock to stop print functions from running
+over each other in their output.
+
+Now we're ready to create some sort of task to show off threading with:
+"""
+
+# The threader thread pulls an worker from the queue and processes it
+def threader():
+	" Creates Threads for workers to populate "
+	while True:						# (No idea why)
+		worker = q.get()																										# Gets an worker from the queue
+		launchJob(worker)																										# Run the job with the avail worker in queue (thread)
+		q.task_done()																												# Completed with the job
+
+"""
+Now we've used this "q," but we've not defined it, so we had better do
+that:
+"""
+q = Queue()																															# Create the queue and threader 
+
+"""
+Now let's create our threads, and put them to work!
+"""
+
+# How many threads are we going to allow for?
+ncpu = multiprocessing.cpu_count()																			# Getting the number of CPUs
+
+for x in range(ncpu-1):																									# Launching one less to avoid saturation
+	""" No more thant this number of CPUs """
+	t = threading.Thread(target=threader)
+	t.daemon = True																												# Classifying as a daemon, so they will die when the main dies
+	t.start()																															# Begins, must come after daemon definition
 
 
 # Python 2/3 support
@@ -35,11 +98,18 @@ class Maplist:
 
 tmp = sys.argv[1]
 dry = False 	# TODO: Read it from CLI parameters
-
-file = os.path.basename(tmp)
+thefile = os.path.basename(tmp)
 path = os.path.split(tmp)[0]
 pf	 = os.path.abspath(tmp)
-print ('\nBasename:', file)
+
+""" In case of manuale debugging
+file = "parset.txt"
+path = "./"
+pf= "./parset.txt"
+"""
+
+
+print ('\nBasename:', thefile)
 
 """
 		Reading input
@@ -96,7 +166,7 @@ for x in decs:
 				# TODO: Not guessable if both attributes are array
 				# TODO: Gues if one attribute is array
 				#~ decs[x].pars["P2"] = list()
-				#~ decs[x].pars["P2"] = 
+				#~ decs[x].pars["P2"] =
 				decs[x].pars["P2"] = [round(1 -
 															float(decs[x].pars["P0"][0]) -
 															float(decs[x].pars["P1"][0]), 4)]
@@ -126,7 +196,7 @@ def unroll (dec,						# declenson object
 	def savemap (mymap, maps, roll):
 		print(roll, " Saving map", len(maps)+1)
 		maps.append(mymap.pars.copy())
-	
+
 	def checkpar (mymap, maps, par, parnames, roll, depth, skip=False):
 		depth += 1
 		par = parnames[depth-1]
@@ -152,10 +222,10 @@ def unroll (dec,						# declenson object
 					maps 	= res['maps']																						# Updating values from the resukt of checkpar()
 					mymap = res['mymap']
 					skip 	= (x == values[-1])			# <<- probably useless					# We need to check again if we should skip next saving
-					skip 	= res['skip']						# <<- Usefull										# But should be overriden by the result of res 
+					skip 	= res['skip']						# <<- Usefull										# But should be overriden by the result of res
 					#~ if skip: print("possible skip", mymap.pars["X_SIZE"])
 
-					
+
 					if (depth == (len(parnames) -1)) and len(mymap.pars[parnames[-1]]) == 1 :
 						""" x is the last value of this par AND this par is the
 								last of the dataset
@@ -163,7 +233,7 @@ def unroll (dec,						# declenson object
 						savemap(mymap, maps, roll)																	# We save the map
 						skip = False																								# Next save should not be skipped (start from scratch)
 
-						
+
 				elif depth == (len(parnames)):
 					""" The current param is the last one """
 					savemap(localmap, maps, roll)																	# Save
@@ -191,7 +261,7 @@ def unroll (dec,						# declenson object
 		return({'maps':maps, 'mymap':mymap, "skip":skip})										# End of the function, returning object as a dict
 	#~ if recurs is False: print("Unrolling...")
 
-	
+
 	print(roll, "Checking for multiple values...")
 	localmap	= None 																											# To prevent pesky ghost values
 	mymap			= None
@@ -210,8 +280,8 @@ def unroll (dec,						# declenson object
 	maps = deepcopy(res['maps']);																					# Getting the results back
 	mymap = res["mymap"];
 
-	
-	
+
+
 	print(roll, "Leaving function with", len(maps), "maps")
 	return({'maps':maps, 'mymap':mymap})
 
@@ -226,23 +296,7 @@ for dec in sorted(decnames):
 	declen = decs[dec]
 	res = unroll(declen)
 	maps[dec] = res['maps']
-	
-#~ dec="F50"; res=None
-#~ declen = decs[dec]
-#~ res = unroll(declen)
-#~ maps[dec] = res['maps']
 
-
-
-
-#~ print("Final maps are")
-#~ for x in sorted(maps):
-	#~ print ("\n", len(maps[x]), "maps in", x)
-
-#~ print("Final maps are")
-#~ for x in sorted(maps):
-	#~ print ("\ndec", x)
-	#~ for m in maps[x]: print(" :Q11", m['Q11']," :Q22", m['Q22']," :X_SIZE", m['X_SIZE']," Y_SIZE", m['Y_SIZE']," :P1", m['P1'])
 
 print("Final maps are")
 for x in sorted(maps):
@@ -253,6 +307,15 @@ for x in sorted(maps):
 
 
 mapnames = list(maps.keys())
+
+
+
+def launchJob(cmd):
+	"A single-arument function to launch a command"
+	print("\nLaunching\n", cmd)
+	subprocess.call( cmd, shell = True)
+	#~ executor.submit(call, cmd, shell = True)
+
 
 # TODO: Create directories if absent
 def launch (infile, executable, filename, path="./"):
@@ -266,17 +329,19 @@ def launch (infile, executable, filename, path="./"):
 	if not os.path.exists(path+"/LOGS/"):
 		print(path+"/LOGS/ does not exist, creating it")
 		os.makedirs(path+"/LOGS/")
-	cmd = executable + " " + infile + " 1> "+ path + "/LOGS/" + filename + ".out 2> " + path + "/LOGS/" + filename +".err &"
+	cmd = executable + " " + infile + " 1> "+ path + "/LOGS/" + filename + ".out 2> " + path + "/LOGS/" + filename +".err"
 	# TODO: Implement custom OUT path
 	print("Launching TLG for", cmd)
-	subprocess.Popen( cmd, shell = True)
+	#~ results = pool.map(do_it, [cmd])															# Assigning the job to the pool of CPUs
+	#~ do_it(cmd)
+	return(cmd)
 
 #
 # Printing the maps into .in files
 #
 # A dedicated function:
 #
-def map2in( mapdict, mapname, mapid=None, suffix=".in", path="./"):
+def map2in( mapdict, mapname, mapid=None, suffix=".in", path="./", cmd="nope"):
 	"This prints a passed string to a passed file"
 	mymap = mapdict
 	name = mapname
@@ -310,7 +375,7 @@ def map2in( mapdict, mapname, mapid=None, suffix=".in", path="./"):
 	file.close()
 	if not dry:
 		""" Parameter --dryrun not set """
-		launch(filename, "tlg-core", filename=name, path=path)							# Actually launches TLG
+		cmd.append(launch(filename, "tlg-core", filename=name, path=path))							# Actually launches TLG
 	return;
 
 #
@@ -319,7 +384,9 @@ def map2in( mapdict, mapname, mapid=None, suffix=".in", path="./"):
 print("\n")
 
 
-	
+
+cmd = list()																														# Will contain all commands to launch the runs
+
 for x in sorted(maps):
 	i = 0
 	for m in maps[x]:
@@ -331,4 +398,23 @@ for x in sorted(maps):
 						"(", m["REPLICATES"][0], "replicates)")
 		for r in reps :
 			# TODO: Implement offset for replicates (in case we want additional maps
-			map2in(mapdict=m, mapname=x+"_"+str(i).zfill(3), mapid=r, path=m["PATH"][0])
+			map2in(mapdict=m, mapname=x+"_"+str(i).zfill(3), mapid=r, path=m["PATH"][0],  cmd=cmd)
+
+
+""" When every job is listed, we just have to start the worker """
+        
+start = time.time()
+
+for cm in cmd:
+    q.put(cm)																														# Put a worker at work
+
+q.join()																																# Wait until the thread terminates.
+
+"""
+Writing down a line in log.txt to remember how long the actual
+running took
+"""
+f=open("log.txt", "w")
+text = "running parameters set in " +  thefile +  "took: " + str(time.time() - start)
+f.write(text)
+f.close()
