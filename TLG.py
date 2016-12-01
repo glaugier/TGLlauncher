@@ -14,6 +14,26 @@ import multiprocessing
 import threading
 from queue import Queue
 import time
+
+import argparse
+
+"""
+First we need to parse the command line arguments.
+"""
+
+parser = argparse.ArgumentParser(prog="tlg-launcher",
+				description='Processes parset files into all combitations of parameters, generates .in files and launches tlg-core')
+parser.add_argument('--version', action='version', version='%(prog)s 0.12')
+parser.add_argument('parsets', type=str, nargs='+',
+										help='The parset files to be parsed')
+parser.add_argument('--dry', action='store_true', default=False,
+										help='Creates .in files but does not launch tlg-core')
+
+args = parser.parse_args()
+parsets = args.parsets																									# A list of parsets
+dry     = args.dry																											# Dry run (no launching tlg-core)
+if dry: print("Dryn-run mode: should not launch tlg")
+
 """
 We've imported threading, queue and time. Threading is for, threading,
 queue is going to help us make, you guessed it, a queue! Finally,
@@ -96,53 +116,57 @@ class Maplist:
 		pass
 
 
-tmp = sys.argv[1]
-dry = False 	# TODO: Read it from CLI parameters
-thefile = os.path.basename(tmp)
-path = os.path.split(tmp)[0]
-pf	 = os.path.abspath(tmp)
-
-""" In case of manuale debugging
-file = "parset.txt"
-path = "./"
-pf= "./parset.txt"
-"""
-
-
-print ('\nBasename:', thefile)
-
-"""
-		Reading input
-"""
 decs = {}																																# decs is a "dictionary" object.
 																																				# decs are declensions of maps (some pars are arrays)
-current = None
-f = open(pf, 'r')																												# We open the file
-mylines = f.read().splitlines()
-f.close()																																# We close the file
-varlist = {}
-for line in mylines:
-	nm 	= line.split(":")[0]
-	val = line.split(":")[1:]
-	if nm == "#": continue 																								# Comment, skipping line
-	if len(val) < 1: 																											# Check if empty line => save variables
-		print("End of", current, "parameters, storing list...")
-		decs[current] = Parset(current, varlist)
-		current = None
-		varlist = {}																												# Otherwise later modifs will affect previous decs[]
-		continue
-	if current is None:
-		""" New set of parameters => store name """
-		current = val[0]
-		continue
+
+"""
+Now we need to do the following for each parameter set file in parsets
+"""
+for parset in parsets:
+	thefile = os.path.basename(parset)
+	path = os.path.split(parset)[0]
+	pf	 = os.path.abspath(parset)
+
+	""" In case of manual debugging
+	file = "parset.txt"
+	path = "./"
+	pf= "./parset.txt"
+	"""
+
+
+	print ('\nBasename:', thefile)
+
+	"""
+			Reading input
+	"""
+
+	current = None
+	f = open(pf, 'r')																											# We open the file
+	mylines = f.read().splitlines()
+	f.close()																															# We close the file
+	varlist = {}
+	for line in mylines:
+		nm 	= line.split(":")[0]
+		val = line.split(":")[1:]
+		if nm == "#": continue 																							# Comment, skipping line
+		if len(val) < 1: 																										# Check if empty line => save variables
+			print("End of", current, "parameters, storing list...")
+			decs[current] = Parset(current, varlist)
+			current = None
+			varlist = {}																											# Otherwise later modifs will affect previous decs[]
+			continue
+		if current is None:
+			""" New set of parameters => store name """
+			current = val[0]
+			continue
 																																				# Save parameter into dictionary
-	varlist[nm] = val[:]
-"""
-We need to store the last declenson, otherwise it's lost
-If there is no empty line followed by a comment in the parser file
-"""
-print("End of file, saving parameters for", current, "...")
-decs[current] = Parset(current, varlist)
+		varlist[nm] = val[:]
+	"""
+	We need to store the last declenson, otherwise it's lost
+	If there is no empty line followed by a comment in the parser file
+	"""
+	print("End of file, saving parameters for", current, "...")
+	decs[current] = Parset(current, varlist)
 
 """
 		Filling in the gaps
@@ -314,10 +338,8 @@ def launchJob(cmd):
 	"A single-arument function to launch a command"
 	print("\nLaunching\n", cmd)
 	subprocess.call( cmd, shell = True)
-	#~ executor.submit(call, cmd, shell = True)
 
 
-# TODO: Create directories if absent
 def launch (infile, executable, filename, path="./"):
 	""" Launch the TLG program, redirecting stdout and stderr to
 			corresponding files
@@ -331,9 +353,7 @@ def launch (infile, executable, filename, path="./"):
 		os.makedirs(path+"/LOGS/")
 	cmd = executable + " " + infile + " 1> "+ path + "/LOGS/" + filename + ".out 2> " + path + "/LOGS/" + filename +".err"
 	# TODO: Implement custom OUT path
-	print("Launching TLG for", cmd)
-	#~ results = pool.map(do_it, [cmd])															# Assigning the job to the pool of CPUs
-	#~ do_it(cmd)
+	print("redying command", cmd)																					# Assigning the job to the pool of CPUs
 	return(cmd)
 
 #
@@ -348,7 +368,7 @@ def map2in( mapdict, mapname, mapid=None, suffix=".in", path="./", cmd="nope"):
 	path = os.path.expanduser(path)																				# Replaces "~"
 	path = os.path.normpath(path)																					# Replaces "./" "../ etc
 	path = os.path.abspath(path)																					# Not sure if useful
-	print("\n\npath is ", path);
+	print("path is ", path);
 	if mapid is not None:
 		""" There is a map replicate ID, should add it to the name """
 		name = name + "_" +str(mapid).zfill(4)															# 4 digits -> up to 9999 maps
@@ -358,7 +378,7 @@ def map2in( mapdict, mapname, mapid=None, suffix=".in", path="./", cmd="nope"):
 		print(path+"/IN/ does not exist, creating it")
 		os.makedirs(path+"/IN/")
 	filename = path + "/IN/" + name + suffix
-	print("\n\nfilename is", filename)
+	print("filename is", filename)
 	file = open(filename, "w")
 	# Writing content
 	file.write("[NAME:"+ name +"] => Name of the generated landscape\n")
@@ -402,11 +422,11 @@ for x in sorted(maps):
 
 
 """ When every job is listed, we just have to start the worker """
-        
+				
 start = time.time()
 
 for cm in cmd:
-    q.put(cm)																														# Put a worker at work
+		q.put(cm)																														# Put a worker at work
 
 q.join()																																# Wait until the thread terminates.
 
