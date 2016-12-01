@@ -61,10 +61,11 @@ Features
 TLG should be launched as a command-line.
 It handles the folowing aruments:
  + `-h` or `--help` to get the help
- + `--version` to print the version
+ + `--version`, `-v` to print the version
 If none of the above is used , then other parameters are allowed or required:
  + *Required* one or more parameter text files (may be an expanded list of files such as  `*`)
  + `--dry` Dryrun: Generates the .in files without actually launching the map generation.
+ + `--verbose`, `-V` verbose mode.
 
 ### Input
  + Read data from "parset" file
@@ -112,7 +113,6 @@ TODO
  + Implement offset for replicates
  + Option for only generating the .in files
   + More CLI arguments
-   + Non-verbose mode
    + Handle custom path to exectutable
    + Custom number of simultaneous CPUs
 

@@ -23,16 +23,19 @@ First we need to parse the command line arguments.
 
 parser = argparse.ArgumentParser(prog="tlg-launcher",
 				description='Processes parset files into all combitations of parameters, generates .in files and launches tlg-core')
-parser.add_argument('--version', action='version', version='%(prog)s 0.12')
+parser.add_argument('--version', action='version', version='%(prog)s 0.12.1')
 parser.add_argument('parsets', type=str, nargs='+',
 										help='The parset files to be parsed')
 parser.add_argument('--dry', action='store_true', default=False,
+										help='Creates .in files but does not launch tlg-core')
+parser.add_argument('--verbose', '-V', action='store_true', default=False,
 										help='Creates .in files but does not launch tlg-core')
 
 args = parser.parse_args()
 parsets = args.parsets																									# A list of parsets
 dry     = args.dry																											# Dry run (no launching tlg-core)
-if dry: print("Dryn-run mode: should not launch tlg")
+verb    = args.verbose																									# Verbose mode
+if dry and verb : print("Dryn-run mode: will not launch tlg")
 
 """
 We've imported threading, queue and time. Threading is for, threading,
@@ -134,7 +137,7 @@ for parset in parsets:
 	"""
 
 
-	print ('\nBasename:', thefile)
+	if verb : print ('\nBasename:', thefile)
 
 	"""
 			Reading input
@@ -150,7 +153,7 @@ for parset in parsets:
 		val = line.split(":")[1:]
 		if nm == "#": continue 																							# Comment, skipping line
 		if len(val) < 1: 																										# Check if empty line => save variables
-			print("End of", current, "parameters, storing list...")
+			if verb: print("End of", current, "parameters, storing list...")
 			decs[current] = Parset(current, varlist)
 			current = None
 			varlist = {}																											# Otherwise later modifs will affect previous decs[]
@@ -165,7 +168,7 @@ for parset in parsets:
 	We need to store the last declenson, otherwise it's lost
 	If there is no empty line followed by a comment in the parser file
 	"""
-	print("End of file, saving parameters for", current, "...")
+	if verb: print("End of file, saving parameters for", current, "...")
 	decs[current] = Parset(current, varlist)
 
 """
@@ -179,14 +182,14 @@ for x in decs:
 		print("Assuming 1 replicate for dec", x)
 		decs[x].pars["REPLICATES"] = [1]
 	if "PATH" not in decs[x].pars:
-		print("Assuming path is './'")
+		print("No path provided, Assuming path is './'")
 		decs[x].pars["PATH"] = ["./"]
 	if "P2" not in decs[x].pars:
-		print("P2 is missing")
+		print("P2 is missing, will be computed")
 		if "P0" in decs[x].pars:
-			print("P0 is",	decs[x].pars["P0"])
+			if verb : print("P0 is",	decs[x].pars["P0"])
 			if  "P1" in decs[x].pars:
-				print("P1 is",	decs[x].pars["P1"])
+				#~ print("P1 is",	decs[x].pars["P1"])
 				# TODO: Not guessable if both attributes are array
 				# TODO: Gues if one attribute is array
 				#~ decs[x].pars["P2"] = list()
@@ -194,7 +197,7 @@ for x in decs:
 				decs[x].pars["P2"] = [round(1 -
 															float(decs[x].pars["P0"][0]) -
 															float(decs[x].pars["P1"][0]), 4)]
-				print("So P2 is",	decs[x].pars["P2"])
+				if verb: print("So P2 is",	decs[x].pars["P2"])
 			else:
 				raise NameError("You need to define at least two of 'P0', 'P1' and 'P3'")
 	#~ print (vars(decs[x]))
@@ -218,7 +221,7 @@ def unroll (dec,						# declenson object
 	depth = 0
 
 	def savemap (mymap, maps, roll):
-		print(roll, " Saving map", len(maps)+1)
+		if verb : print(roll, " Saving map", len(maps)+1)
 		maps.append(mymap.pars.copy())
 
 	def checkpar (mymap, maps, par, parnames, roll, depth, skip=False):
@@ -229,13 +232,13 @@ def unroll (dec,						# declenson object
 		if len(mymap.pars[par]) > 1:
 			""" Multiple values for parameter 'par' """
 			values = mymap.pars[par]																					# Storing the values to restore them later
-			print(roll, "= ", values)
+			if verb : print(roll, "= ", values)
 			for x in values:
 				#~ if x == values[-1]: print("Last value: SKIP!!!")
-				print(roll, "=", x)
+				if verb : print(roll, "=", x)
 				localmap = deepcopy(mymap)																			# We work on a temporary copy of the parameter set
 				localmap.pars[par] =  [x]																				# Now parameter 'par' has a single value
-				#~ print(roll, "depth", depth, "/", len(parnames))
+				#~ if verb : print(roll, "depth", depth, "/", len(parnames))
 				if depth < (len(parnames)):
 					""" We are NOT working on the last parameter """							# Usually the last is Y_SIZE, but keeps it flexible
 					if not skip: skip = (x == values[-1])													# Check if we should skip saving
@@ -262,11 +265,11 @@ def unroll (dec,						# declenson object
 					""" The current param is the last one """
 					savemap(localmap, maps, roll)																	# Save
 					skip = True																										# Skip the next save (Already saved)
-			print(roll, "<< restoring")
+			if verb : print(roll, "<< restoring")
 			mymap.pars[par] = values																					# Restoring the initial valueS of the parameter
 		else:
 			""" Only one value for this param """
-			print(roll);
+			if verb : print(roll);
 			if depth < len(mymap.pars):
 				""" This is NOT the last parameter """
 				res = checkpar(mymap=mymap, maps=maps, par=par,									# Need to check for the other parameters
@@ -274,19 +277,19 @@ def unroll (dec,						# declenson object
 				maps = res['maps']
 				mymap = res['mymap']																						# Updating values from the resukt of checkpar()
 				skip = res['skip']
-			#~ print(roll, "depth", depth, "of", len(parnames))
+			#~ if verb : print(roll, "depth", depth, "of", len(parnames))
 			if (depth == (len(parnames) -1)) and not skip:
 				""" This is the last parameter and
 						the map has not been saved yet
 				"""
 				savemap(mymap, maps, roll)																			# Save
 				skip=False																											# Next save should not be skipped (start from scratch)
-			#~ print(roll, "\t", par, "= ", mymap.pars[par])
+			#~ if verb : print(roll, "\t", par, "= ", mymap.pars[par])
 		return({'maps':maps, 'mymap':mymap, "skip":skip})										# End of the function, returning object as a dict
 	#~ if recurs is False: print("Unrolling...")
 
 
-	print(roll, "Checking for multiple values...")
+	if verb : print(roll, "Checking for multiple values...")
 	localmap	= None 																											# To prevent pesky ghost values
 	mymap			= None
 	values		= None
@@ -306,7 +309,7 @@ def unroll (dec,						# declenson object
 
 
 
-	print(roll, "Leaving function with", len(maps), "maps")
+	if verb : print(roll, "Leaving function with", len(maps), "maps")
 	return({'maps':maps, 'mymap':mymap})
 
 
@@ -314,7 +317,7 @@ maps = {}
 
 
 for dec in sorted(decnames):
-	print("unrolling for", dec)
+	if verb: print("unrolling for", dec)
 	declen = None
 	res = None
 	declen = decs[dec]
@@ -322,11 +325,11 @@ for dec in sorted(decnames):
 	maps[dec] = res['maps']
 
 
-print("Final maps are")
-for x in sorted(maps):
-	for m in maps[x]:
-		tmp = {k: m[k] for k in ("P0", "P1", "X_SIZE", 'Q11', 'Q22')}
-		pprint.pprint(tmp, width=4)
+#~ print("Final maps are")
+#~ for x in sorted(maps):
+	#~ for m in maps[x]:
+		#~ tmp = {k: m[k] for k in ("P0", "P1", "X_SIZE", 'Q11', 'Q22')}
+		#~ pprint.pprint(tmp, width=4)
 
 
 
@@ -368,7 +371,7 @@ def map2in( mapdict, mapname, mapid=None, suffix=".in", path="./", cmd="nope"):
 	path = os.path.expanduser(path)																				# Replaces "~"
 	path = os.path.normpath(path)																					# Replaces "./" "../ etc
 	path = os.path.abspath(path)																					# Not sure if useful
-	print("path is ", path);
+	if verb : print("path is ", path);
 	if mapid is not None:
 		""" There is a map replicate ID, should add it to the name """
 		name = name + "_" +str(mapid).zfill(4)															# 4 digits -> up to 9999 maps
@@ -378,7 +381,7 @@ def map2in( mapdict, mapname, mapid=None, suffix=".in", path="./", cmd="nope"):
 		print(path+"/IN/ does not exist, creating it")
 		os.makedirs(path+"/IN/")
 	filename = path + "/IN/" + name + suffix
-	print("filename is", filename)
+	if verb : print("filename is", filename)
 	file = open(filename, "w")
 	# Writing content
 	file.write("[NAME:"+ name +"] => Name of the generated landscape\n")
@@ -413,7 +416,7 @@ for x in sorted(maps):
 		i += 1
 		reps = list(range(int(m["REPLICATES"][0])))													# Create a list 0:REPLICATES
 		reps = [x+1 for x in reps] 																					# add 1 to reps : 1:(REPLICATES +1)
-		print("Creating '.in' file(s) for map",
+		if verb: print("Creating '.in' file(s) for map",
 						str(i).zfill(3), "declension " + x,
 						"(", m["REPLICATES"][0], "replicates)")
 		for r in reps :
